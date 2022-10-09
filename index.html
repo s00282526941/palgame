@@ -54,91 +54,93 @@ var zhao_animations = {
 	dead: [2*56,img2_y, 56,63,],
 };
 let map=new Image(),scene;
-map.onload = function () {
-	scene = new Konva.Image({
-		image: map,
-		x: -1260+width/2,
-		y: -900+height/2,
-		
-	});
-	layer.add(scene);
-	
-	
-};
+
 map.src = './data/img/map01.png';
 imageObj.onload = function () {
-	blob = new Konva.Sprite({
-		x: width/2,
-		y: height/2,
-		image: imageObj,
-		animation: 'idle',
-		animations: zhao_animations,
-		frameRate: 4,
-		frameIndex: 0,
-	});
-
-	// add the shape to the layer
-	layer.add(blob);
-	stage.add(layer);
-	//blob.x(blob.x()+13);
-	//blob.y(blob.y()-46*2);
-	// start sprite animation
-	blob.start();
+	map.onload = function () {
+		scene = new Konva.Image({
+			image: map,
+			x: -1260+width/2,
+			y: -900+height/2,
+			
+		});
+		layer.add(scene);
+		
+		
 	
-	// resume transition
-	document.getElementById('atk').addEventListener('click', 
-		function () {
-			 
-			blob.animation('atk');
-			blob.on('frameIndexChange.button', function () {
-				if (this.frameIndex() == 2) {
+		blob = new Konva.Sprite({
+			x: width/2,
+			y: height/2,
+			image: imageObj,
+			animation: 'idle',
+			animations: zhao_animations,
+			frameRate: 4,
+			frameIndex: 0,
+		});
+
+		// add the shape to the layer
+		layer.add(blob);
+		stage.add(layer);
+		//blob.x(blob.x()+13);
+		//blob.y(blob.y()-46*2);
+		// start sprite animation
+		blob.start();
+		
+		// resume transition
+		document.getElementById('atk').addEventListener('click', 
+			function () {
+				 
+				blob.animation('atk');
+				blob.on('frameIndexChange.button', function () {
+					if (this.frameIndex() == 2) {
+						setTimeout(function () {
+							blob.animation('idle');
+							blob.off('.button');
+						}, 1000 / blob.frameRate());
+					}
+				});
+			},
+			false
+		);
+		document.getElementById('matk').addEventListener('click', 
+			function () {
+				 
+				blob.animation('matk');
+				blob.on('frameIndexChange.button', function () {
+					if (this.frameIndex() === 1) {
+						setTimeout(function () {
+							blob.animation('idle');
+							blob.off('.button');
+						}, 1000 / blob.frameRate());
+					}
+				});
+			},
+			false
+		);
+		document.getElementById('hurt').addEventListener('click', 
+			function () {
+				 
+				blob.animation('hurt');
+				if (blob.frameIndex() == 0) {
 					setTimeout(function () {
 						blob.animation('idle');
 						blob.off('.button');
 					}, 1000 / blob.frameRate());
 				}
-			});
-		},
-		false
-	);
-	document.getElementById('matk').addEventListener('click', 
-		function () {
+			},
+			false
+		);
+		document.getElementById('dead').addEventListener('click', 
+			function () {
+				 
+				blob.animation('dead');	
+			},false);
+		document.getElementById('def').addEventListener('click', function () {
 			 
-			blob.animation('matk');
-			blob.on('frameIndexChange.button', function () {
-				if (this.frameIndex() === 1) {
-					setTimeout(function () {
-						blob.animation('idle');
-						blob.off('.button');
-					}, 1000 / blob.frameRate());
-				}
-			});
-		},
-		false
-	);
-	document.getElementById('hurt').addEventListener('click', 
-		function () {
-			 
-			blob.animation('hurt');
-			if (blob.frameIndex() == 0) {
-				setTimeout(function () {
-					blob.animation('idle');
-					blob.off('.button');
-				}, 1000 / blob.frameRate());
-			}
-		},
-		false
-	);
-	document.getElementById('dead').addEventListener('click', 
-		function () {
-			 
-			blob.animation('dead');	
+			blob.animation('def');
 		},false);
-	document.getElementById('def').addEventListener('click', function () {
-		 
-		blob.animation('def');
-	},false);
-	anim.start(); 
+		anim.start(); 
+	};
 };
 imageObj.src = './data/img/zhao.png';
 var anim = new Konva.Animation(function (frame) {
