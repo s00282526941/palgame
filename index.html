@@ -7,69 +7,91 @@
 
 </head>
 <body>
-	<table style="position:absolute; left:400px">
-		<thead><tr><th>工作日志：</th><tr></thead>
-		<tbody>
-			<tr><td>（2022年10月1日）滑鼠左键讓角色移動位置</td></tr>
-			<tr><td>（2022年9月30日）滑鼠左键讓角色改變位置</td></tr>
-			<tr><td>（2022年9月29日）角色動作顯示，以按鈕方式測試</td></tr>
-			<tr><td>（2022年9月28日）擬定計劃，設計仙劍破壞神網頁游戲</td></tr>
-		</tbody>
-	</table>
+	
 	<button id="atk">物理攻擊</button>
 	<button id="matk">法術攻擊</button>
 	<button id="def">防禦</button>
 	<button id="hurt">受到攻擊</button>
 	<button id="dead">死亡</button>
 	<div id="container"></div>
+	<table style="height: 200px; overflow-y: scroll; background-color:white; position:absolute; left:700px; top:0px">
+		<thead><tr><th>工作日志：</th><tr></thead>
+		<tbody>
+			<tr><td>（2022年10月10日）加入地圖,角色走路動作顯示</td></tr>
+			<tr><td>（2022年10月9日）物理攻擊動作微調圖片大小</td></tr>
+			<tr><td>（2022年10月1日）滑鼠左键讓角色移動位置</td></tr>
+			<tr><td>（2022年9月30日）滑鼠左键讓角色改變位置</td></tr>
+			<tr><td>（2022年9月29日）角色動作顯示，以按鈕方式測試</td></tr>
+			<tr><td>（2022年9月28日）擬定計劃，設計仙劍破壞神網頁游戲</td></tr>
+		</tbody>
+	</table>
 </body>
 <script>
 
-let test_a;
 var width = window.innerWidth;
 var height = window.innerHeight;
-
+var layer = new Konva.Layer();
 var stage = new Konva.Stage({
 	container: 'container',
 	width: width,
 	height: height,
 });
-
-var layer = new Konva.Layer();
-var animations = {
-	idle: [0, 0, 56,63],
-	atk: [7*56,0, 56,63,  468,0,56,63,    523,0, 56,63],
-	matk: [5*56,0, 56,63, 6*56,0, 56,63],
-	def: [3*56,0, 56,63],
-	hurt: [4*56,0, 56,63,],
-	dead: [2*56,0, 56,63,],
+var imageObj = new Image(),blob,velocity=1.5,px=width/2,py=height/2; 
+let img2_y=46;
+var zhao_animations = {
+	//layer1 = 0
+	leftup: [3*26,0, 26,46,   4*26,0, 26,46,    5*26,0, 26,46],
+	rightup: [6*26,0, 26,46,   7*26,0, 26,46,    8*26,0, 26,46],
+	leftdown: [0*26,0, 26,46,   1*26,0, 26,46,    2*26,0, 26,46],
+	rightdown: [9*26,0, 26,46,   10*26,0, 26,46,    11*26,0, 26,46],
+	
+	//layer2 = 46
+	idle: [0, img2_y, 56,63],
+	atk: [7*56,img2_y, 56,63,  8*56+73*0,img2_y,73,74,     8*56+73*1,img2_y, 73,74],
+	matk: [5*56,img2_y, 56,63, 6*56,img2_y, 56,63],
+	def: [3*56,img2_y, 56,63],
+	hurt: [4*56,img2_y, 56,63],
+	dead: [2*56,img2_y, 56,63,],
 };
-var imageObj = new Image();
+let map=new Image(),scene;
+map.onload = function () {
+	scene = new Konva.Image({
+		image: map,
+		x: -1260+width/2,
+		y: -900+height/2,
+		
+	});
+	layer.add(scene);
+	
+	
+};
+map.src = './data/img/map01.png';
 imageObj.onload = function () {
-	var blob = new Konva.Sprite({
-		x: 100,
-		y: 100,
-
+	blob = new Konva.Sprite({
+		x: width/2,
+		y: height/2,
 		image: imageObj,
 		animation: 'idle',
-		animations: animations,
-		frameRate: 7,
+		animations: zhao_animations,
+		frameRate: 4,
 		frameIndex: 0,
 	});
 
 	// add the shape to the layer
 	layer.add(blob);
 	stage.add(layer);
-
+	//blob.x(blob.x()+13);
+	//blob.y(blob.y()-46*2);
 	// start sprite animation
 	blob.start();
-	test_a=blob;
+	
 	// resume transition
 	document.getElementById('atk').addEventListener('click', 
 		function () {
+			 
 			blob.animation('atk');
 			blob.on('frameIndexChange.button', function () {
-				if (this.frameIndex() === 2) {
+				if (this.frameIndex() == 2) {
 					setTimeout(function () {
 						blob.animation('idle');
 						blob.off('.button');
@@ -81,6 +103,7 @@ imageObj.onload = function () {
 	);
 	document.getElementById('matk').addEventListener('click', 
 		function () {
+			 
 			blob.animation('matk');
 			blob.on('frameIndexChange.button', function () {
 				if (this.frameIndex() === 1) {
@@ -95,6 +118,7 @@ imageObj.onload = function () {
 	);
 	document.getElementById('hurt').addEventListener('click', 
 		function () {
+			 
 			blob.animation('hurt');
 			if (blob.frameIndex() == 0) {
 				setTimeout(function () {
@@ -107,26 +131,41 @@ imageObj.onload = function () {
 	);
 	document.getElementById('dead').addEventListener('click', 
 		function () {
-			blob.animation('dead');
-			
+			 
+			blob.animation('dead');	
 		},false);
-	document.getElementById('def').addEventListener('click', function () {blob.animation('def');},false);
-  };
-  imageObj.src = './data/img/zhaolinger.png';
-  stage.addEventListener('mousedown', function(evt) {
-	px=evt.clientX-56/2,py= evt.clientY-63;
-	//mousePos = {x: px,y:py};	
-	//test_a.position(mousePos);
-	anim.start();
-}, false);
-let velocity=5,px=100,py=100;
+	document.getElementById('def').addEventListener('click', function () {
+		 
+		blob.animation('def');
+	},false);
+	anim.start(); 
+};
+imageObj.src = './data/img/zhao.png';
 var anim = new Konva.Animation(function (frame) {
-	if(test_a.x()>px) test_a.x(test_a.x()-velocity);
-	if(test_a.y()>py) test_a.y(test_a.y()-velocity);
-	if(test_a.x()<px) test_a.x(test_a.x()+velocity);
-	if(test_a.y()<py) test_a.y(test_a.y()+velocity);
-	//test_a.position(px,py);
+	
+	if(blob.x()<px) {px-=velocity; scene.x(scene.x()-velocity);}
+	if(blob.y()<py) {py-=velocity; scene.y(scene.y()-velocity);}
+	if(blob.x()>px) {px+=velocity; scene.x(scene.x()+velocity);}
+	if(blob.y()>py) {py+=velocity; scene.y(scene.y()+velocity);}
+	//scene.position(px,py);
+	
+	//else blob.animation('idle');
 }, layer);
+stage.addEventListener('mousedown', function(evt) {
+	px=evt.clientX,py= evt.clientY;
+	//mousePos = {x: px,y:py};	
+	//blob.position(mousePos);
+	
+	if(px>blob.x()&&py>blob.y()) blob.animation('rightdown');	
+	else if(px>blob.x()&&py<blob.y()) blob.animation('rightup');
+	else if(px<blob.x()&&py>blob.y()) blob.animation('leftdown');	
+	else if(px<blob.x()&&py<blob.y()) blob.animation('leftup');	
+	
+	
+		
+}, false);
+
+
 
 </script>
 </html>
