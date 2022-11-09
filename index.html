@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-	img:hover{
-		border:1px solid #fdfdfd;
-		background-color: yellow;
 
-		cursor: pointer;
-	}
-</style>
+
 <link href="./data/toastr.min.css" rel="stylesheet"></link>
 <link href="./data/jquery-ui.css" rel="stylesheet"></link>
 <link href="./data/theme.css" rel="stylesheet"></link>
@@ -27,7 +21,7 @@
 
 <div id="container" style="background-color:black; top:0px; left:0px; position:absolute;"></div>
 
-<div style="position:absolute; left:500px; top:0px;">
+<div style="position:absolute; left:0px; top:0px;">
 	<div id="mouse_pos" style="color:white">Mouse position: 0,0</div>
 	<select id="map_select" onchange='change_map(this[this.selectedIndex].text);'>
 		<option selected="true">0001</option>
@@ -67,8 +61,8 @@
 <script>
 let fileInput=document.getElementById('upload_file');//querySelector("input[type='file']");
 
-let s_pos={x:33, y:15}, e_pos={x:33, y:15}, map_pos={x:31, y:31};
-var img_main_char = new Image(),main_char,velocity=1.5,offset_x=s_pos.x*tile_x2,offset_y=s_pos.y*tile_y; let img2_y=46;
+let s_pos={x:77, y:58}, e_pos={x:33, y:15}, map_pos={x:77, y:58},range=32;
+var img_main_char = new Image(),main_char,velocity=1.5,offset_x=range*tile_x2,offset_y=range*tile_y2; let img2_y=46;
 var width = 2*offset_x-tile_x2;//window.innerWidth;
 var height = 2*offset_y-tile_y2;//window.innerHeight;
 var stage = new Konva.Stage({
@@ -107,27 +101,29 @@ function info_update(evt) {
 	let mp=getMousePos(layer.getCanvas()._canvas, evt);
 	let p=mousePos2mapPos(mp);
 	
-	mouse_pos.style.top=p.y;
-	mouse_pos.style.left=p.x;
-	oval.x(p.x*tile_x2);
-	oval.y(p.y*tile_y);
+	//mouse_pos.style.top=p.y;
+	//mouse_pos.style.left=p.x;
+	cursor.x(p.x*tile_x2);
+	cursor.y(p.y*tile_y2);
 	
-	mouse_pos.innerHTML="x:"+(map_pos.x)+"("+mp.x+"), y:"+(map_pos.x)+"("+mp.y+")";
+	let a={x:(map_pos.x+p.x-range/2),y:(map_pos.y+p.y-range/2)};
+	mouse_pos.innerHTML="x:"+a.x+"("+mp.x+"), y:"+a.y+"("+mp.y+")";
+	return a;
 }
 layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
+	let e_pos=info_update(evt);
 	
-	
-	let mp=getMousePos(layer.getCanvas()._canvas, evt);
-	e_pos=mousePos2mapPos(mp);
-	
-	main_char.y(offset_y-36);
+	//main_char.y(offset_y-36);
 	
 	if(e_pos.x>s_pos.x&&e_pos.y>s_pos.y) {  main_char.animation('rightdown');}
 	else if(e_pos.x>s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('rightup');}
 	else if(e_pos.x<s_pos.x&&e_pos.y>s_pos.y) { main_char.animation('leftdown');}
 	else if(e_pos.x<s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('leftup');}
 	
-	//moving==true;
+	//s_pos=e_pos;
+	
+	
+	draw_map(e_pos.x,e_pos.y);
 	
 }, false);
 
@@ -149,28 +145,14 @@ var anim = new Konva.Animation(function (frame) {
 }, layer);
 moving=false;
 function mousePos2mapPos(p){
-	p={x:Math.round(p.x/tile_x2),y:Math.round(p.y/tile_y)};
+	p={x:Math.round(p.x/tile_x2),y:Math.round(p.y/tile_y2)};
 	if(p.x%2!=p.y%2) p.y--;
 
 	return p;
 }
 layer.getCanvas()._canvas.addEventListener('mousemove', function(e) {info_update(e);}, false);
 
-/*var oval = new Konva.Rect({
-	x: offset_x,
-	y: offset_y,
-	width: 32,
-	height: 15,
-	offset: {
-	  x: 16,
-	  y: 7.5,
-	},
-	stroke: 'green',
-	strokeWidth: 2,
-	rotate:30
-});*/
-
-var oval = new Konva.Shape({
+var cursor = new Konva.Shape({
         sceneFunc: function (context, shape) {
   context.beginPath();
   context.moveTo(16, 0);
@@ -189,7 +171,7 @@ var oval = new Konva.Shape({
 	  y: 7.5,
 	},
 });
-layer.add(oval);	
+layer.add(cursor);	
 stage.add(map_layer,layer);
 
 img_main_char.src = './data/img/zhao.png';
@@ -279,6 +261,7 @@ function change_map(path="0001"){
 	draw_map();
 	draw_mgo();
 }
+
 async function map_init(path="0001"){
 	
 	if(map_data.length==0) {
@@ -340,7 +323,6 @@ async function read_map(file_path="0002"){
 			if(bytes[1]>0)bytes[1]-=1;
 			//if(451>=bytes[1]&&bytes[1]>0) ctx.drawImage(gop[bytes[1]], x, y); //上層
 			
-			
 			if(bytes[3]>max_gop) max_gop=bytes[3];
 			if(bytes[1]>max_gop) max_gop=bytes[1];
 			
@@ -377,15 +359,16 @@ function Map_Assert(x,y){
 	
 	return (0 <= x && x <= 127 && 0 <= y && y <= 127)?true:false;	
 }
+
+
 function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 	px=Math.round(px);
 	py=Math.round(py);
 	
-	
 	map_pos.x=px; map_pos.y=py;
 	if(px%2==1) map_pos.x=px+=1;
 
-	let r2=r/2,r4=r2/2;
+	let r2=r/2,r4=r2/2,main_flag=false;
 	for(let row=0;row<r2;row++){
 		for(let col=0;col<r;col++){
 			let x=(col)*tile_x2-tile_x2, y=(row)*15+(col)%2*tile_y2-tile_y2;
@@ -395,10 +378,17 @@ function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 			ctx.drawImage(gop[c.down_layer], x, y); //下層
 			if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], x, y); //up層	
 			
-			//console.log('dx',dx,'dy',dy);
-			//ctx.fillText(row+", "+col,x,y);
+			
+			if(s_pos.x==dx&&s_pos.y==dy) {
+				main_char.visible(true);
+				main_char.x(x); 
+				main_char.y(y);
+				main_flag=true;
+			}
+			
 		}
 	}
+	if(main_flag==false) main_char.visible(false);
 }
 function PrefixInteger(num, length) {
 	return (Array(length).join('0') + num).slice(-length);
