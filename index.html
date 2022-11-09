@@ -7,12 +7,6 @@
 <link href="./data/jquery-ui.css" rel="stylesheet"></link>
 <link href="./data/theme.css" rel="stylesheet"></link>
 
-
-<script src="./data/jquery-ui.js"></script>
-<script src="./data/toastr.min.js"></script>
-<script src="./data/konva.min.js"></script>
-<script src="./data/global_value.js"></script>
-
 <meta charset="utf-8" />
 <title>仙劍破壞神</title>
 </head>
@@ -58,43 +52,33 @@
 </table>
 </body>
 
+<script src="./data/jquery-3.5.1.min.js"></script>
+<script src="./data/jquery-ui.js"></script>
+<script src="./data/toastr.min.js"></script>
+<script src="./data/konva.min.js"></script>
+<script src="./data/global_value.js"></script>
+
 <script>
-let fileInput=document.getElementById('upload_file');//querySelector("input[type='file']");
+//let fileInput=document.getElementById('upload_file');//querySelector("input[type='file']");
 
-let s_pos={x:77, y:58}, e_pos={x:33, y:15}, map_pos={x:77, y:58},range=32;
-var img_main_char = new Image(),main_char,velocity=1.5,offset_x=range*tile_x2,offset_y=range*tile_y2; let img2_y=46;
-var width = 2*offset_x-tile_x2;//window.innerWidth;
-var height = 2*offset_y-tile_y2;//window.innerHeight;
-var stage = new Konva.Stage({
-	container: 'container',
-	width: width,
-	height: height,
-});
-var ctx = map_layer.getCanvas()._canvas.getContext('2d');
-let map_data=[],Template_Data=[],gop=[];
-let mousePos;
-
-var zhao_animations = {
-	//layer1 = 0
-	leftup: [3*26,0, 26,46,   4*26,0, 26,46,    5*26,0, 26,46],
-	rightup: [6*26,0, 26,46,   7*26,0, 26,46,    8*26,0, 26,46],
-	leftdown: [0*26,0, 26,46,   1*26,0, 26,46,    2*26,0, 26,46],
-	rightdown: [9*26,0, 26,46,   10*26,0, 26,46,    11*26,0, 26,46],
-	
-	//layer2 = 46
-	idle: [0, img2_y, 56,63],
-	atk: [7*56,img2_y, 56,63,  8*56+73*0,img2_y,73,74,     8*56+73*1,img2_y, 73,74],
-	matk: [5*56,img2_y, 56,63, 6*56,img2_y, 56,63],
-	def: [3*56,img2_y, 56,63],
-	hurt: [4*56,img2_y, 56,63],
-	dead: [2*56,img2_y, 56,63,],
-};
 function getMousePos(canvas, evt) {
 	var rect = canvas.getBoundingClientRect();
 	return {
 		x: evt.clientX - rect.left,
 		y: evt.clientY - rect.top
 	};
+}
+function mousePos2mapPos(p){
+	p={x:Math.round((p.x-width/2)/tile_x2),y:Math.round((p.y-height/2)/tile_y)};
+	if(p.x%2!=p.y%2) p.y--;
+
+	return p;
+}
+function cursor_pos(p){
+	p={x:Math.round(p.x/tile_x2)*tile_x2,y:Math.round(p.y/tile_y2)*tile_y2};
+	if(p.x%2!=p.y%2) p.y--;
+
+	return p;
 }
 function info_update(evt) {
 	let mouse_pos=document.getElementById("mouse_pos");
@@ -103,15 +87,16 @@ function info_update(evt) {
 	
 	//mouse_pos.style.top=p.y;
 	//mouse_pos.style.left=p.x;
-	cursor.x(p.x*tile_x2);
-	cursor.y(p.y*tile_y2);
 	
-	let a={x:(map_pos.x+p.x-range/2),y:(map_pos.y+p.y-range/2)};
+	let cp=cursor_pos(mp);
+	cursor.x(cp.x); cursor.y(cp.y);
+	
+	let a={x:Math.round(map_pos.x+p.x),y:Math.round(map_pos.y+p.y)};
 	mouse_pos.innerHTML="x:"+a.x+"("+mp.x+"), y:"+a.y+"("+mp.y+")";
 	return a;
 }
 layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
-	let e_pos=info_update(evt);
+	e_pos=info_update(evt);
 	
 	//main_char.y(offset_y-36);
 	
@@ -120,61 +105,28 @@ layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
 	else if(e_pos.x<s_pos.x&&e_pos.y>s_pos.y) { main_char.animation('leftdown');}
 	else if(e_pos.x<s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('leftup');}
 	
-	//s_pos=e_pos;
-	
-	
-	draw_map(e_pos.x,e_pos.y);
-	
+	//alert(e_pos.x,e_pos.y);
+	main_char.start();
 }, false);
-
-let char_speed=.1;
 var anim = new Konva.Animation(function (frame) {
 	if(e_pos.x!=s_pos.x||e_pos.y!=s_pos.y) {
-		let p=[];
-		p.x=e_pos.x+map_pos.x;
-		p.y=e_pos.y+map_pos.y;
 		
-		
-		
-		if(e_pos.x>s_pos.x) e_pos.x-=char_speed; 
-		if(e_pos.x<s_pos.x) e_pos.x+=char_speed; 
+		if(e_pos.x>s_pos.x) s_pos.x+=char_speed; 
+		if(e_pos.x<s_pos.x) s_pos.x-=char_speed; 
 			
-		if(e_pos.y>s_pos.y) e_pos.y-=char_speed; 
-		if(e_pos.y<s_pos.y) e_pos.y+=char_speed; 
+		if(e_pos.y>s_pos.y) s_pos.y+=char_speed; 
+		if(e_pos.y<s_pos.y) s_pos.y-=char_speed; 
+		
+		
+		
+		draw_map(s_pos.x,s_pos.y);
 	}	
+	//else main_char.stop();
 }, layer);
-moving=false;
-function mousePos2mapPos(p){
-	p={x:Math.round(p.x/tile_x2),y:Math.round(p.y/tile_y2)};
-	if(p.x%2!=p.y%2) p.y--;
 
-	return p;
-}
 layer.getCanvas()._canvas.addEventListener('mousemove', function(e) {info_update(e);}, false);
 
-var cursor = new Konva.Shape({
-        sceneFunc: function (context, shape) {
-  context.beginPath();
-  context.moveTo(16, 0);
-  context.lineTo(32, 7.5);
-  context.lineTo(16, 15);
-  context.lineTo(0, 7.5);
-  context.closePath();
 
-  // (!) Konva specific method, it is very important
-  context.fillStrokeShape(shape);
-  },
-  stroke: 'green',
-	strokeWidth: 2,
-	offset: {
-	  x: 16,
-	  y: 7.5,
-	},
-});
-layer.add(cursor);	
-stage.add(map_layer,layer);
-
-img_main_char.src = './data/img/zhao.png';
 img_main_char.onload = function () {
 	main_char = new Konva.Sprite({
 		x:offset_x,
@@ -188,11 +140,7 @@ img_main_char.onload = function () {
 
 	// add the shape to the layer
 	layer.add(main_char);
-				
-	
-	
-	//main_char.x(main_char.x()+13);
-	//main_char.y(main_char.y()-46*2);
+		
 	// start sprite animation
 	main_char.start();
 	
@@ -200,6 +148,7 @@ img_main_char.onload = function () {
 	document.getElementById('atk').addEventListener('click', 
 		function () {
 			//main_char.y(offset_y);
+			main_char.start();
 			main_char.animation('atk');
 			main_char.on('frameIndexChange.button', function () {
 				if (this.frameIndex() == 2) {
@@ -214,10 +163,10 @@ img_main_char.onload = function () {
 	);
 	document.getElementById('matk').addEventListener('click', 
 		function () {
-			//main_char.y(offset_y);
+			main_char.start();//main_char.y(offset_y);
 			main_char.animation('matk');
 			main_char.on('frameIndexChange.button', function () {
-				if (this.frameIndex() === 1) {
+				if (this.frameIndex() == 1) {
 					setTimeout(function () {
 						main_char.animation('idle');
 						main_char.off('.button');
@@ -229,7 +178,7 @@ img_main_char.onload = function () {
 	);
 	document.getElementById('hurt').addEventListener('click', 
 		function () {
-			//main_char.y(offset_y);
+			main_char.start();//main_char.y(offset_y);
 			main_char.animation('hurt');
 			if (main_char.frameIndex() == 0) {
 				setTimeout(function () {
@@ -251,15 +200,10 @@ img_main_char.onload = function () {
 	},false);
 	
 };
-
-map_init();
 function change_map(path="0001"){
-	
-	//alert("path",path);
-	
 	read_map(path);
 	draw_map();
-	draw_mgo();
+	
 }
 
 async function map_init(path="0001"){
@@ -283,6 +227,9 @@ async function map_init(path="0001"){
 	r.readAsArrayBuffer(fileInput.files[0]);
 	toastr["success"]("read "+fn);
 }, false);*/
+function read_gate(path){
+	
+}
 async function read_gop(path="0002",max_gop){
 	console.log('max_gop=',max_gop);
 	
@@ -330,6 +277,7 @@ async function read_map(file_path="0002"){
 		}
 	}
 	read_gop(file_path,max_gop);
+	read_gate(file_path);
 }
 function read_bin(file_path){
 	let rawFile = new XMLHttpRequest();
@@ -368,7 +316,7 @@ function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 	map_pos.x=px; map_pos.y=py;
 	if(px%2==1) map_pos.x=px+=1;
 
-	let r2=r/2,r4=r2/2,main_flag=false;
+	let r2=r/2,r4=r2/2,main_flag=false;// main_char.visible(true);
 	for(let row=0;row<r2;row++){
 		for(let col=0;col<r;col++){
 			let x=(col)*tile_x2-tile_x2, y=(row)*15+(col)%2*tile_y2-tile_y2;
@@ -379,16 +327,16 @@ function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 			if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], x, y); //up層	
 			
 			
-			if(s_pos.x==dx&&s_pos.y==dy) {
-				main_char.visible(true);
-				main_char.x(x); 
-				main_char.y(y);
+			if(dx<s_pos.x&&s_pos.x<dx&&dy<s_pos.y&&s_pos.y<dy) {
+				x=(s_pos.x)*tile_x2-tile_x2, y=(s_pos.y)*15+(s_pos.x)%2*tile_y2-tile_y2;
+				main_char.x(x+5); 
+				main_char.y(y-35);
 				main_flag=true;
 			}
 			
 		}
 	}
-	if(main_flag==false) main_char.visible(false);
+	//if(main_flag==false) main_char.visible(false);
 }
 function PrefixInteger(num, length) {
 	return (Array(length).join('0') + num).slice(-length);
@@ -405,6 +353,11 @@ function make_arr(){
 	}
 	return arr;
 }
+
+function create_gate(){
+}
+map_init();
+
 
 </script>
 </html>
