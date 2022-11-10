@@ -3,11 +3,13 @@ var ctx = map_layer.getCanvas()._canvas.getContext('2d');
 let map_data=[],gop=[],mousePos;
 let tile_x=32,tile_y=15,tile_x2=16,tile_y2=7.5;
 let blank={down_layer:0,down_layer:0,barrier:true};
-let s_pos={x:77, y:58}, e_pos={x:77, y:58}, map_pos={x:77, y:58},range=32;
+let s_pos={x:71, y:61},e_pos={x:71, y:61},map_pos={x:71, y:61},range=32;
 let char_speed=.25;
 var img_main_char = new Image(),main_char,offset_x=range*tile_x2,offset_y=range*tile_y2; let img2_y=46;
 var width = 2*offset_x-tile_x2;//window.innerWidth;
 var height = 2*offset_y-tile_y2;//window.innerHeight;
+let map_id=1,gate=[];
+
 var stage = new Konva.Stage({
 	container: 'container',
 	width: width,
