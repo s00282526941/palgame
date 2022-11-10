@@ -117,9 +117,9 @@ var anim = new Konva.Animation(function (frame) {
 		if(e_pos.y>s_pos.y) s_pos.y+=char_speed; 
 		if(e_pos.y<s_pos.y) s_pos.y-=char_speed; 
 		
-		
-		
 		draw_map(s_pos.x,s_pos.y);
+		draw_gate();
+		
 	}	
 	//else main_char.stop();
 }, layer);
@@ -131,6 +131,8 @@ img_main_char.onload = function () {
 	main_char = new Konva.Sprite({
 		x:offset_x,
 		y:offset_y-46,
+		width:26,
+		height:46,
 		image: img_main_char,
 		animation: 'idle',
 		animations: zhao_animations,
@@ -200,10 +202,11 @@ img_main_char.onload = function () {
 	},false);
 	
 };
-function change_map(path="0001"){
+function change_map(path="0001",p){
 	read_map(path);
-	draw_map();
-	
+	read_gate(path);
+	s_pos=e_pos=p;
+	draw_map(p.x,p.y);
 }
 
 async function map_init(path="0001"){
@@ -213,6 +216,7 @@ async function map_init(path="0001"){
 	}
 	await read_map(path);
 	draw_map();
+	read_gate(path);
 	
 	anim.start(); 
 }
@@ -227,9 +231,7 @@ async function map_init(path="0001"){
 	r.readAsArrayBuffer(fileInput.files[0]);
 	toastr["success"]("read "+fn);
 }, false);*/
-function read_gate(path){
-	
-}
+
 async function read_gop(path="0002",max_gop){
 	console.log('max_gop=',max_gop);
 	
@@ -241,6 +243,7 @@ async function read_gop(path="0002",max_gop){
 	}
 	return await read_img();
 }
+
 async function read_map(file_path="0002"){
 	let response = await fetch("./data/map/map"+file_path);
 	const buffer = await response.arrayBuffer(); // 取得 ArrayBuffer 實例
@@ -277,7 +280,7 @@ async function read_map(file_path="0002"){
 		}
 	}
 	read_gop(file_path,max_gop);
-	read_gate(file_path);
+	
 }
 function read_bin(file_path){
 	let rawFile = new XMLHttpRequest();
@@ -307,8 +310,6 @@ function Map_Assert(x,y){
 	
 	return (0 <= x && x <= 127 && 0 <= y && y <= 127)?true:false;	
 }
-
-
 function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 	px=Math.round(px);
 	py=Math.round(py);
@@ -333,9 +334,9 @@ function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 				main_char.y(y-35);
 				main_flag=true;
 			}
-			
 		}
 	}
+	
 	//if(main_flag==false) main_char.visible(false);
 }
 function PrefixInteger(num, length) {
@@ -354,9 +355,122 @@ function make_arr(){
 	return arr;
 }
 
-function create_gate(){
+
+
+var tooltip = new Konva.Label({
+	x: 170,
+	y: 75,
+	opacity: 0.75,
+});
+tooltip.add(
+	new Konva.Tag({
+		fill: 'black',
+		pointerDirection: 'down',
+		pointerWidth: 10,
+		pointerHeight: 10,
+		lineJoin: 'round',
+		shadowColor: 'black',
+		shadowBlur: 10,
+		shadowOffsetX: 10,
+		shadowOffsetY: 10,
+		shadowOpacity: 0.5,
+	})
+);
+tooltip.add(
+	new Konva.Text({
+		text: 'Tooltip pointing down',
+		fontFamily: 'Calibri',
+		fontSize: 18,
+		padding: 5,
+		fill: 'white',
+	})
+);
+var transport = new Konva.Ellipse({
+	x: 20,
+	y: 20,
+	radiusX: tile_x*1.5,
+	radiusY: tile_y*1.5,
+	fill: 'white',
+	opacity: 0.3,
+	
+	/*offset: {
+		x: 0,
+		y: tile_y*2,
+	},*/
+});
+/*transport.on('mouseover', function () {
+	this.opacity(0.3);
+});
+
+transport.on('mouseout', function () {
+	this.opacity(0);
+});*/
+
+
+// add the shape to the layer
+//let test_b;
+function collisionCheck(obj1,obj2){
+	//test_a=obj1;
+	//test_b=obj2;
+	if(obj2.x()<obj1.x()&&obj1.x()<obj2.x()+obj2.width() && obj2.y()<obj1.y()&&obj1.y()<obj2.y()+obj2.height()) return true;
+	if(obj2.x()<obj1.x()+obj1.width()&&obj1.x()+obj1.width()<obj2.x()+obj2.width() && obj2.y()<obj1.y()&&obj1.y()<obj2.y()+obj2.height()) return true;
+	if(obj2.x()<obj1.x()+obj1.width()&&obj1.x()+obj1.width()<obj2.x()+obj2.width() && obj2.y()<obj1.y()+obj1.height()&&obj1.y()+obj1.height()<obj2.y()+obj2.height()) return true;
+	if(obj2.x()<obj1.x()&&obj1.x()<obj2.x()+obj2.width() && obj2.y()<obj1.y()+obj1.height()&&obj1.y()+obj1.height()<obj2.y()+obj2.height()) return true;
+	
+	return false;
+} 
+function dist(point,circle) {
+	return (Math.sqrt((point.x-circle.x) ** 2 + (point.y - circle.y) ** 2) < circle.radius);
 }
+function draw_gate(px=map_pos.x,py=map_pos.y){
+	let r=64,r2=r/2,r4=r2/2,min_len=width;
+	
+	for(let i=0;i<gate[map_id].length;i++){
+		let g=gate[map_id][i];
+		let s_pos=g.s_pos;
+		console.log('map_id',map_id);
+		//test_a=g;
+		
+		let col=s_pos.x-px+r2,row=(s_pos.y>py)?s_pos.y-py+r4:r4-(py-s_pos.y);
+		let x=col*tile_x2-tile_x2, y=row*tile_y;
+		
+		
+		let len=dist(s_pos,map_pos);
+		
+		if(0<x&&x<width || 0<y&&y<height && min_len>len){
+			min_len=len;
+			tooltip.children[1].text(g.name);
+			tooltip.position({x:x,y:y});
+			transport.position({x:x,y:y});
+			
+			console.log(i,x,y);
+			
+			if(collisionCheck(main_char,transport)==true) change_map(g.path,g.e_pos);
+		}
+		 
+		
+	}
+}
+layer.add(transport,tooltip);
+gate[1]=[];//余杭村
+gate[1].push({name:"李大娘的客棧", path:"0002",s_pos:{x:78,y:54},e_pos:{x:0,y:110}});
+gate[1].push({name:"往漁市場", path:"0002",s_pos:{x:125,y:75},e_pos:{x:0,y:110}});
+gate[2]=[];//漁市場
+gate[2].push({name:"余杭村", path:"0001",s_pos:{x:0,y:110},e_pos:{x:122,y:75}});
+gate[2].push({name:"往仙靈島", path:"0003",s_pos:{x:73,y:85},e_pos:{x:42,y:53}});
+gate[3]=[];//仙靈島
+gate[3].push({name:"往漁市場", path:"0002",s_pos:{x:41,y:54},e_pos:{x:72,y:86}});
+//gate[3].push({name:"蓮花池", path:"0003",s_pos:{x:128,y:8},e_pos:{x:42,y:53}});
+
+gate[10]=[];//客棧
+gate[10].push({name:"余杭村", path:"0001",s_pos:{x:41,y:54},e_pos:{x:72,y:86}});
+function read_gate(path="0002"){
+	map_id=parseInt(path);
+	
+}
+
 map_init();
+
 
 
 </script>
