@@ -17,13 +17,13 @@
 
 <div style="position:absolute; left:0px; top:0px;">
 	<div id="mouse_pos" style="color:white">Mouse position: 0,0</div>
-	<select id="map_select" onchange='change_map(this[this.selectedIndex].text);'>
+	<!--<select id="map_select" onchange='change_map(this[this.selectedIndex].text);'>
 		<option selected="true">0001</option>
 		<option>0002</option>
 		<option>0003</option>
 		<option>0004</option>
 		<option>0005</option>
-	</select>
+	</select>-->
 	<button id="atk">物理攻擊</button>
 	<button id="matk">法術攻擊</button>
 	<button id="def">防禦</button>
@@ -38,7 +38,9 @@
 <table style="height: 200px; overflow-y: scroll; background-color:white; position:absolute; left:850px; top:0px">
 	<thead><tr><th>工作日志：</th><tr></thead>
 	<tbody>
-		<tr><td>（2022年11月9日）加入五張地圖並上傳網頁伺服器測試</td></tr>
+		<tr><td>（2022年11月11日）加入測試傳送點（有問題）</td></tr>
+		<tr><td>（2022年11月10）畫面解析度加大</td></tr>
+		<tr><td>（2022年11月10日）滑鼠左鍵按住可延續行走</td></tr>
 		<tr><td>（2022年11月7日）加入0001~2地圖測試兩個</td></tr>
 		<tr><td>（2022年11月6日）地圖破圖問題修正</td></tr>
 		<tr><td>（2022年10月16日）解析map.mkf地圖</td></tr>
@@ -81,6 +83,7 @@ function cursor_pos(p){
 	return p;
 }
 function info_update(evt) {
+	mouse_evt=evt;
 	let mouse_pos=document.getElementById("mouse_pos");
 	let mp=getMousePos(layer.getCanvas()._canvas, evt);
 	let p=mousePos2mapPos(mp);
@@ -95,10 +98,8 @@ function info_update(evt) {
 	mouse_pos.innerHTML="x:"+a.x+"("+mp.x+"), y:"+a.y+"("+mp.y+")";
 	return a;
 }
-layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
+function moving(evt){
 	e_pos=info_update(evt);
-	
-	//main_char.y(offset_y-36);
 	
 	if(e_pos.x>s_pos.x&&e_pos.y>s_pos.y) {  main_char.animation('rightdown');}
 	else if(e_pos.x>s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('rightup');}
@@ -106,8 +107,35 @@ layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
 	else if(e_pos.x<s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('leftup');}
 	
 	//alert(e_pos.x,e_pos.y);
-	main_char.start();
+	//main_char.start();
+}
+let mousedown=0,mouse_evt=null;
+layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
+	mousedown=1;
+	
+	moving(evt);
+	
+	/*let msg = [];
+	switch (evt.button) {
+		case 0:
+		msg.textContent = 'Left mouse button clicked.';
+		break;
+		case 1:
+		msg.textContent = 'Middle mouse button clicked.';
+		break;
+		case 2:
+		msg.textContent = 'Right mouse button clicked.';
+		break;
+		default:
+		msg.textContent = 'side button clicked ${e.button}';
+	}
+	toastr["info"](msg.textContent);*/
 }, false);
+layer.getCanvas()._canvas.addEventListener('mouseup', function(evt) {
+	mousedown=0;
+}, false);
+document.oncontextmenu = function(){ window.event.returnValue=false; }//將滑鼠右鍵事件取消 
+	
 var anim = new Konva.Animation(function (frame) {
 	if(e_pos.x!=s_pos.x||e_pos.y!=s_pos.y) {
 		
@@ -118,9 +146,11 @@ var anim = new Konva.Animation(function (frame) {
 		if(e_pos.y<s_pos.y) s_pos.y-=char_speed; 
 		
 		draw_map(s_pos.x,s_pos.y);
-		draw_gate();
-		
+		//draw_gate();
+		if(mousedown && mouse_evt!=null) moving(mouse_evt);
 	}	
+	
+	
 	//else main_char.stop();
 }, layer);
 
@@ -129,8 +159,8 @@ layer.getCanvas()._canvas.addEventListener('mousemove', function(e) {info_update
 
 img_main_char.onload = function () {
 	main_char = new Konva.Sprite({
-		x:offset_x,
-		y:offset_y-46,
+		x:width/2,
+		y:height/2-46,
 		width:26,
 		height:46,
 		image: img_main_char,
@@ -138,6 +168,7 @@ img_main_char.onload = function () {
 		animations: zhao_animations,
 		frameRate: 4,
 		frameIndex: 0,
+		scale:{x:scale,y:scale},
 	});
 
 	// add the shape to the layer
@@ -204,8 +235,14 @@ img_main_char.onload = function () {
 };
 function change_map(path="0001",p){
 	read_map(path);
-	read_gate(path);
-	s_pos=e_pos=p;
+	
+	e_pos.x=s_pos.x=p.x;
+	e_pos.y=s_pos.y=p.y;
+	e_pos.x=s_pos.x+2;
+	
+	//tooltip.position({x:-99,y:-99});
+	//transport.position({x:-99,y:-99});
+	
 	draw_map(p.x,p.y);
 }
 
@@ -215,10 +252,11 @@ async function map_init(path="0001"){
 		map_data=make_arr();
 	}
 	await read_map(path);
-	draw_map();
 	read_gate(path);
 	
 	anim.start(); 
+	draw_map();
+	console.log("map_init");
 }
 /*fileInput.addEventListener('change', function (e) {
 	let fn=fileInput.files[0].name;
@@ -231,17 +269,28 @@ async function map_init(path="0001"){
 	r.readAsArrayBuffer(fileInput.files[0]);
 	toastr["success"]("read "+fn);
 }, false);*/
+async function addImageProcess(src){
+  return new Promise((resolve, reject) => {
+    let img = new Image()
+    img.onload = () => resolve(img.height);
+    img.onerror = reject;
+    img.src = src;
+  })
+}
 
-async function read_gop(path="0002",max_gop){
-	console.log('max_gop=',max_gop);
+function read_gop(path="0002",max_gop){
+	//console.log('max_gop=',max_gop);
 	
 	function read_img(){
 		for(let c=0;c<=max_gop;c++){
 			gop[c]=new Image();
-			gop[c].src="./data/img/gop/"+path+"/"+c+".png";
+			gop[c].src=("./data/img/gop/"+path+"/"+c+".png");
+			
+			gop[c].width=tile_x+"px";
+			gop[c].height=tile_y+"px";
 		}
 	}
-	return await read_img();
+	read_img();
 }
 
 async function read_map(file_path="0002"){
@@ -252,10 +301,10 @@ async function read_map(file_path="0002"){
 	//da=read_bin(da);
 	//test_a=da;
 	let max_gop=0;
-	console.log(da.length);
+	//console.log(da.length);
 	for(let row=0;row<128;row++){
 		for(let col=0;col<128;col++){
-			let x=col*tile_x2, y=row*15+(col%2)*tile_y2;
+			let x=col*tile_x2, y=row*tile_y+(col%2)*tile_y2;
 			let c=row*128 + col;
 			let bytes = getIntBytes(da[c],4);
 			//let bytes = da.slice(c,c+4);
@@ -320,23 +369,23 @@ function draw_map(px=map_pos.x,py=map_pos.y,r=64){
 	let r2=r/2,r4=r2/2,main_flag=false;// main_char.visible(true);
 	for(let row=0;row<r2;row++){
 		for(let col=0;col<r;col++){
-			let x=(col)*tile_x2-tile_x2, y=(row)*15+(col)%2*tile_y2-tile_y2;
+			let x=(col)*tile_x2-tile_x2, y=(row)*tile_y+(col)%2*tile_y2-tile_y2;
 			
 			let dx=col+px-r2,dy=row+py-r4;
 			let c=(Map_Assert(dx,dy))?map_data[dy][dx]:blank;
-			ctx.drawImage(gop[c.down_layer], x, y); //下層
-			if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], x, y); //up層	
+			ctx.drawImage(gop[c.down_layer], x, y,tile_x,tile_y); //下層
+			if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], x, y,tile_x,tile_y); //up層	
 			
 			
 			if(dx<s_pos.x&&s_pos.x<dx&&dy<s_pos.y&&s_pos.y<dy) {
-				x=(s_pos.x)*tile_x2-tile_x2, y=(s_pos.y)*15+(s_pos.x)%2*tile_y2-tile_y2;
+				x=(s_pos.x)*tile_x2-tile_x2, y=(s_pos.y)*tile_y+(s_pos.x)%2*tile_y2-tile_y2;
 				main_char.x(x+5); 
 				main_char.y(y-35);
 				main_flag=true;
 			}
 		}
 	}
-	
+	draw_gate();
 	//if(main_flag==false) main_char.visible(false);
 }
 function PrefixInteger(num, length) {
@@ -420,50 +469,53 @@ function collisionCheck(obj1,obj2){
 	return false;
 } 
 function dist(point,circle) {
-	return (Math.sqrt((point.x-circle.x) ** 2 + (point.y - circle.y) ** 2) < circle.radius);
+	return (Math.sqrt((point.x-circle.x) ** 2 + (point.y - circle.y) ** 2) );
 }
 function draw_gate(px=map_pos.x,py=map_pos.y){
 	let r=64,r2=r/2,r4=r2/2,min_len=width;
 	
 	for(let i=0;i<gate[map_id].length;i++){
 		let g=gate[map_id][i];
-		let s_pos=g.s_pos;
-		console.log('map_id',map_id);
+		
+		//console.log('map_id',map_id);
 		//test_a=g;
 		
-		let col=s_pos.x-px+r2,row=(s_pos.y>py)?s_pos.y-py+r4:r4-(py-s_pos.y);
+		let col=g.s_pos.x-px+r2,row=(g.s_pos.y>py)?g.s_pos.y-py+r4:r4-(py-g.s_pos.y);
 		let x=col*tile_x2-tile_x2, y=row*tile_y;
-		
-		
-		let len=dist(s_pos,map_pos);
-		
-		if(0<x&&x<width || 0<y&&y<height && min_len>len){
+		let len=dist({x:width/2,y:height/2},{x:x,y:y});
+		//(0<x&&x<width && 0<y&&y<height) &&
+		if(min_len>len){
 			min_len=len;
 			tooltip.children[1].text(g.name);
 			tooltip.position({x:x,y:y});
 			transport.position({x:x,y:y});
 			
-			console.log(i,x,y);
+			//console.log(i,x,y);
 			
 			if(collisionCheck(main_char,transport)==true) change_map(g.path,g.e_pos);
 		}
+		/*else {
+			tooltip.position({x:-99,y:-99});
+			transport.position({x:-99,y:-99});
+		}*/
 		 
 		
 	}
 }
+
 layer.add(transport,tooltip);
 gate[1]=[];//余杭村
-gate[1].push({name:"李大娘的客棧", path:"0002",s_pos:{x:78,y:54},e_pos:{x:0,y:110}});
+gate[1].push({name:"李大娘的客棧", path:"0010",s_pos:{x:78,y:54},e_pos:{x:63,y:105}});
 gate[1].push({name:"往漁市場", path:"0002",s_pos:{x:125,y:75},e_pos:{x:0,y:110}});
 gate[2]=[];//漁市場
 gate[2].push({name:"余杭村", path:"0001",s_pos:{x:0,y:110},e_pos:{x:122,y:75}});
-gate[2].push({name:"往仙靈島", path:"0003",s_pos:{x:73,y:85},e_pos:{x:42,y:53}});
+gate[2].push({name:"往仙靈島", path:"0003",s_pos:{x:72,y:85},e_pos:{x:42,y:53}});
 gate[3]=[];//仙靈島
-gate[3].push({name:"往漁市場", path:"0002",s_pos:{x:41,y:54},e_pos:{x:72,y:86}});
+gate[3].push({name:"回余杭村", path:"0002",s_pos:{x:41,y:54},e_pos:{x:72,y:86}});
 //gate[3].push({name:"蓮花池", path:"0003",s_pos:{x:128,y:8},e_pos:{x:42,y:53}});
 
 gate[10]=[];//客棧
-gate[10].push({name:"余杭村", path:"0001",s_pos:{x:41,y:54},e_pos:{x:72,y:86}});
+gate[10].push({name:"客棧門口", path:"0001",s_pos:{x:63,y:105},e_pos:{x:78,y:55}});
 function read_gate(path="0002"){
 	map_id=parseInt(path);
 	
