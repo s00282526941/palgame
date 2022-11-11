@@ -246,7 +246,7 @@ function change_map(path="0001",p){
 	draw_map(p.x,p.y);
 }
 
-async function map_init(path="0001"){
+async function sys_init(path="0001"){
 	
 	if(map_data.length==0) {
 		map_data=make_arr();
@@ -256,7 +256,7 @@ async function map_init(path="0001"){
 	
 	anim.start(); 
 	draw_map();
-	console.log("map_init");
+	console.log("sys_init");
 }
 /*fileInput.addEventListener('change', function (e) {
 	let fn=fileInput.files[0].name;
@@ -281,16 +281,14 @@ async function addImageProcess(src){
 function read_gop(path="0002",max_gop){
 	//console.log('max_gop=',max_gop);
 	
-	function read_img(){
-		for(let c=0;c<=max_gop;c++){
-			gop[c]=new Image();
-			gop[c].src=("./data/img/gop/"+path+"/"+c+".png");
-			
-			gop[c].width=tile_x+"px";
-			gop[c].height=tile_y+"px";
-		}
+	function read_img(c,path){
+		gop[c]=new Image();
+		gop[c].src=("./data/img/gop/"+path+"/"+c+".png");
+		
+		//gop[c].width=tile_x+"px";
+		//gop[c].height=tile_y+"px";
 	}
-	read_img();
+	for(let c=0;c<=max_gop;c++) read_img(c,path);
 }
 
 async function read_map(file_path="0002"){
@@ -521,7 +519,7 @@ function read_gate(path="0002"){
 	
 }
 
-map_init();
+sys_init();
 
 
 
