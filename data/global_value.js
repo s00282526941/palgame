@@ -1,13 +1,13 @@
 var layer = new Konva.Layer(),map_layer = new Konva.Layer();
 var ctx = map_layer.getCanvas()._canvas.getContext('2d');
-let map_data=[],gop=[],mousePos;
-let tile_x=32,tile_y=15,tile_x2=16,tile_y2=7.5;
+let map_data=[],gop=[],mousePos,scale=2;
+let tile_x=32*scale,tile_y=15*scale,tile_x2=tile_x/2,tile_y2=tile_y/2;
 let blank={down_layer:0,down_layer:0,barrier:true};
-let s_pos={x:71, y:61},e_pos={x:71, y:61},map_pos={x:71, y:61},range=32;
+let s_pos={x:71, y:61},e_pos={x:71, y:61+2},map_pos={x:71, y:61},range=32;
 let char_speed=.25;
 var img_main_char = new Image(),main_char,offset_x=range*tile_x2,offset_y=range*tile_y2; let img2_y=46;
-var width = 2*offset_x-tile_x2;//window.innerWidth;
-var height = 2*offset_y-tile_y2;//window.innerHeight;
+var width = window.innerWidth;//2*offset_x-tile_x2;
+var height = window.innerHeight;//2*offset_y-tile_y2;
 let map_id=1,gate=[];
 
 var stage = new Konva.Stage({
@@ -33,20 +33,20 @@ var zhao_animations = {
 var cursor = new Konva.Shape({
 	sceneFunc: function (context, shape) {
 		context.beginPath();
-		context.moveTo(16, 0);
-		context.lineTo(32, 7.5);
-		context.lineTo(16, 15);
-		context.lineTo(0, 7.5);
+		context.moveTo(tile_x2, 0);
+		context.lineTo(tile_x, tile_y2);
+		context.lineTo(tile_x2, tile_y);
+		context.lineTo(0, tile_y2);
 		context.closePath();
 
 		// (!) Konva specific method, it is very important
 		context.fillStrokeShape(shape);
 	},
 	stroke: 'green',
-	strokeWidth: 2,
+	strokeWidth: scale*2,
 	offset: {
-		x: 16,
-		y: 7.5,
+		x: tile_x2,
+		y: tile_y2,
 	},
 });
 layer.add(cursor);	
