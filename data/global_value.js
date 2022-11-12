@@ -1,15 +1,23 @@
+var width = window.innerWidth;
+var height = window.innerHeight;
 var layer = new Konva.Layer(),map_layer = new Konva.Layer();
 var ctx = map_layer.getCanvas()._canvas.getContext('2d');
-let map_data=[],gop=[],mousePos,scale=2;
+var ctx_layer = layer.getCanvas()._canvas.getContext('2d');
+
+let map_data=[],gop=[],mousePos,scale=3;
 let tile_x=32*scale,tile_y=15*scale,tile_x2=tile_x/2,tile_y2=tile_y/2;
 let blank={down_layer:0,down_layer:0,barrier:true};
-let s_pos={x:71, y:61},e_pos={x:71, y:61+2},map_pos={x:71, y:61},range=32;
-let char_speed=.25;
-var img_main_char = new Image(),main_char,offset_x=range*tile_x2,offset_y=range*tile_y2; let img2_y=46;
-var width = window.innerWidth;//2*offset_x-tile_x2;
-var height = window.innerHeight;//2*offset_y-tile_y2;
+let s_pos={x:33, y:55,h:1},e_pos={x:33, y:55,h:1},map_pos={x:33, y:55,h:1},range=Math.round(width/2/tile_x);
+let char_speed=.1;
+var img_main_char = new Image(),main_char,img2_x=26, img2_y=46;
 let map_id=1,gate=[];
 
+function change_scale(s=scale){
+	scale=s;
+	tile_x=32*scale,tile_y=15*scale,tile_x2=tile_x/2,tile_y2=tile_y/2;
+	range=Math.round(width/2/tile_x);
+	draw_map();
+}
 var stage = new Konva.Stage({
 	container: 'container',
 	width: width,
