@@ -35,23 +35,27 @@
 	
 </div>
 
-<table style="height: 200px; overflow-y: scroll; background-color:white; position:absolute; left:850px; top:0px">
+<div style="height: 150px; overflow-y: scroll; background-color:white; position:absolute; left:900px; top:0px">
+<table>
 	<thead><tr><th>工作日志：</th><tr></thead>
 	<tbody>
-		<tr><td>（2022年11月11日）加入測試傳送點（有問題）</td></tr>
-		<tr><td>（2022年11月10）畫面解析度加大</td></tr>
-		<tr><td>（2022年11月10日）滑鼠左鍵按住可延續行走</td></tr>
-		<tr><td>（2022年11月7日）加入0001~2地圖測試兩個</td></tr>
-		<tr><td>（2022年11月6日）地圖破圖問題修正</td></tr>
-		<tr><td>（2022年10月16日）解析map.mkf地圖</td></tr>
-		<tr><td>（2022年10月10日）加入地圖,角色走路動作顯示</td></tr>
-		<tr><td>（2022年10月9日）物理攻擊動作微調圖片大小</td></tr>
-		<tr><td>（2022年10月1日）滑鼠左键讓角色移動位置</td></tr>
-		<tr><td>（2022年9月30日）滑鼠左键讓角色改變位置</td></tr>
-		<tr><td>（2022年9月29日）角色動作顯示，以按鈕方式測試</td></tr>
-		<tr><td>（2022年9月28日）擬定計劃，設計仙劍破壞神網頁游戲</td></tr>
+		<tr><td>（2022.11.12）彈性設定視野寬度</td></tr>
+		<tr><td>（2022.11.12）移動位置偏移修正</td></tr>
+		<tr><td>（2022.11.11）加入測試傳送點（有問題）</td></tr>
+		<tr><td>（2022.11.10）畫面全熒幕</td></tr>
+		<tr><td>（2022.11.10）滑鼠左鍵按住可延續行走</td></tr>
+		<tr><td>（2022.11.7）加入0001~2地圖測試兩個</td></tr>
+		<tr><td>（2022.11.6）地圖破圖問題修正</td></tr>
+		<tr><td>（2022.10.16）解析map.mkf地圖</td></tr>
+		<tr><td>（2022.10.10）加入地圖,角色走路動作顯示</td></tr>
+		<tr><td>（2022.10.9）物理攻擊動作微調圖片大小</td></tr>
+		<tr><td>（2022.10.1）滑鼠左键讓角色移動位置</td></tr>
+		<tr><td>（2022.9.30）滑鼠左键讓角色改變位置</td></tr>
+		<tr><td>（2022.9.29）角色動作顯示，以按鈕方式測試</td></tr>
+		<tr><td>（2022.9.28）擬定計劃，設計仙劍破壞神網頁游戲</td></tr>
 	</tbody>
 </table>
+</div>
 </body>
 
 <script src="./data/jquery.min.js"></script>
@@ -62,7 +66,6 @@
 
 <script>
 //let fileInput=document.getElementById('upload_file');//querySelector("input[type='file']");
-
 function getMousePos(canvas, evt) {
 	var rect = canvas.getBoundingClientRect();
 	return {
@@ -70,33 +73,17 @@ function getMousePos(canvas, evt) {
 		y: evt.clientY - rect.top
 	};
 }
-function mousePos2mapPos(p){
-	p={x:Math.round((p.x-width/2)/tile_x2),y:Math.round((p.y-height/2)/tile_y)};
-	if(p.x%2!=p.y%2) p.y--;
-
-	return p;
-}
-function cursor_pos(p){
-	p={x:Math.round(p.x/tile_x2)*tile_x2,y:Math.round(p.y/tile_y2)*tile_y2};
-	if(p.x%2!=p.y%2) p.y--;
-
-	return p;
-}
-function info_update(evt) {
-	mouse_evt=evt;
-	let mouse_pos=document.getElementById("mouse_pos");
-	let mp=getMousePos(layer.getCanvas()._canvas, evt);
-	let p=mousePos2mapPos(mp);
+function mp2map(p){
+	let pos={x:Math.round((p.x)/tile_x2),y:Math.round((p.y)/tile_y2)};
 	
-	//mouse_pos.style.top=p.y;
-	//mouse_pos.style.left=p.x;
+	pos.h=0;
+	if(pos.x%2!=0) {pos.x-=1; pos.h=1;}
+	if(pos.y%2!=0) {pos.y-=1; pos.h=1;}
 	
-	let cp=cursor_pos(mp);
-	cursor.x(cp.x); cursor.y(cp.y);
-	
-	let a={x:Math.round(map_pos.x+p.x),y:Math.round(map_pos.y+p.y)};
-	mouse_pos.innerHTML="x:"+a.x+"("+mp.x+"), y:"+a.y+"("+mp.y+")";
-	return a;
+	pos.x/=2; 
+	pos.y/=2; 
+	cursor.x(pos.x*tile_x+pos.h*tile_x2); cursor.y(pos.y*tile_y+pos.h*tile_y2);
+	return pos;
 }
 function moving(evt){
 	e_pos=info_update(evt);
@@ -106,7 +93,7 @@ function moving(evt){
 	else if(e_pos.x<s_pos.x&&e_pos.y>s_pos.y) { main_char.animation('leftdown');}
 	else if(e_pos.x<s_pos.x&&e_pos.y<s_pos.y) { main_char.animation('leftup');}
 	
-	//alert(e_pos.x,e_pos.y);
+	//console.log(e_pos);
 	//main_char.start();
 }
 let mousedown=0,mouse_evt=null;
@@ -137,17 +124,58 @@ layer.getCanvas()._canvas.addEventListener('mouseup', function(evt) {
 document.oncontextmenu = function(){ window.event.returnValue=false; }//將滑鼠右鍵事件取消 
 	
 var anim = new Konva.Animation(function (frame) {
-	if(e_pos.x!=s_pos.x||e_pos.y!=s_pos.y) {
+	
+	if(e_pos.x!=s_pos.x || e_pos.y!=s_pos.y || e_pos.h!=s_pos.h){
+		if(e_pos.x>s_pos.x) {
+			s_pos.x+=char_speed; 
+			if(e_pos.x<s_pos.x){
+				s_pos.x=e_pos.x;
+				//console.log(1);
+			}
+		}
+		if(e_pos.x<s_pos.x) {
+			s_pos.x-=char_speed; 
+			if(e_pos.x>s_pos.x){
+				s_pos.x=e_pos.x;
+				//console.log(2);
+			}
+		}
 		
-		if(e_pos.x>s_pos.x) s_pos.x+=char_speed; 
-		if(e_pos.x<s_pos.x) s_pos.x-=char_speed; 
+		if(e_pos.y>s_pos.y) {
+			s_pos.y+=char_speed; 
+			if(e_pos.y<s_pos.y){
+				s_pos.y=e_pos.y;
+				//console.log(3);
+			}
+		}
+		if(e_pos.y<s_pos.y) {
+			s_pos.y-=char_speed; 
+			if(e_pos.y>s_pos.y){
+				s_pos.y=e_pos.y;
+				//console.log(4);
+			}
 			
-		if(e_pos.y>s_pos.y) s_pos.y+=char_speed; 
-		if(e_pos.y<s_pos.y) s_pos.y-=char_speed; 
+		}
 		
-		draw_map(s_pos.x,s_pos.y);
-		//draw_gate();
+		if(e_pos.h>s_pos.h) {
+			s_pos.h+=char_speed; 
+			if(e_pos.h<s_pos.h){
+				s_pos.h=e_pos.h;
+				//console.log(5);
+			}
+		}
+		if(e_pos.h<s_pos.h) {
+			s_pos.h-=char_speed; 
+			if(e_pos.h>s_pos.h){
+				s_pos.h=e_pos.h;
+				//console.log(6);
+			}
+			
+		}
+		
 		if(mousedown && mouse_evt!=null) moving(mouse_evt);
+		
+		draw_view(s_pos);
 	}	
 	
 	
@@ -159,18 +187,19 @@ layer.getCanvas()._canvas.addEventListener('mousemove', function(e) {info_update
 
 img_main_char.onload = function () {
 	main_char = new Konva.Sprite({
-		x:width/2,
-		y:height/2-46,
-		width:26,
-		height:46,
+		x:0,
+		y:0,
+		width:img2_x,
+		height:img2_y,
 		image: img_main_char,
 		animation: 'idle',
 		animations: zhao_animations,
 		frameRate: 4,
 		frameIndex: 0,
 		scale:{x:scale,y:scale},
+		
 	});
-
+	main_char.offset({x:main_char.width()/2,y:main_char.height()*.9});
 	// add the shape to the layer
 	layer.add(main_char);
 		
@@ -233,17 +262,17 @@ img_main_char.onload = function () {
 	},false);
 	
 };
-function change_map(path="0001",p){
+function change_map(path="0001",p=s_pos){
 	read_map(path);
 	
 	e_pos.x=s_pos.x=p.x;
 	e_pos.y=s_pos.y=p.y;
 	e_pos.x=s_pos.x+2;
-	
+	e_pos.h=s_pos.h;
 	//tooltip.position({x:-99,y:-99});
 	//transport.position({x:-99,y:-99});
 	
-	draw_map(p.x,p.y);
+	draw_view(p);
 }
 
 async function sys_init(path="0001"){
@@ -253,9 +282,10 @@ async function sys_init(path="0001"){
 	}
 	await read_map(path);
 	read_gate(path);
-	
+	ctx.imageSmoothingEnabled = false;
+
 	anim.start(); 
-	draw_map();
+	draw_view();
 	console.log("sys_init");
 }
 /*fileInput.addEventListener('change', function (e) {
@@ -354,47 +384,82 @@ function getIntBytes( x,i = 4){
     return bytes;
 }
 function Map_Assert(x,y){
-	
 	return (0 <= x && x <= 127 && 0 <= y && y <= 127)?true:false;	
 }
-function draw_map(px=map_pos.x,py=map_pos.y,r=64){
-	px=Math.round(px);
-	py=Math.round(py);
+function draw_view(sp=map_pos,r=range){
+	draw_map(sp);
 	
-	map_pos.x=px; map_pos.y=py;
-	if(px%2==1) map_pos.x=px+=1;
-
-	let r2=r/2,r4=r2/2,main_flag=false;// main_char.visible(true);
-	for(let row=0;row<r2;row++){
-		for(let col=0;col<r;col++){
-			let x=(col)*tile_x2-tile_x2, y=(row)*tile_y+(col)%2*tile_y2-tile_y2;
+	draw_char(s_pos);
+}
+function info_update(evt) {
+	mouse_evt=evt;
+	let mouse_pos=document.getElementById("mouse_pos");
+	let mp=getMousePos(layer.getCanvas()._canvas, evt);
+	let p=mp2map(mp);
+	
+	p.x=p.x-range+map_pos.x;
+	p.y=p.y-range+map_pos.y;
+	//p.x=(p.x>=map_pos.x)?p.x-map_pos.x+range:p.x-map_pos.x+range;
+	//p.y=(p.y>=map_pos.y)?p.y-map_pos.y+range:map_pos.y-p.y+range;
+	//p.h-=map_pos.h;
+	
+	mouse_pos.innerHTML="x:"+p.x+"("+mp.x+"), y:"+p.y+"("+mp.y+"), h:"+p.h;
+	return p;
+}
+function map2mp(pos=s_pos){
+	let p=[];
+	//console.log('--start--');
+	//console.log(pos,map_pos);
+	p.x=(pos.x>=map_pos.x)?pos.x-map_pos.x+range:range-(map_pos.x-pos.x);
+	p.y=(pos.y>=map_pos.y)?pos.y-map_pos.y+range:range-(map_pos.y-pos.y);
+	p.h=pos.h;
+	//console.log(p);
+	p.x*=tile_x; p.y*=tile_y;
+	p.x+=p.h*tile_x2; p.y+=p.h*tile_y2;
+	//console.log(p);
+	//console.log('--end--');
+	return p;
+}
+function draw_char(sp=s_pos,r=range){
+	
+	let p=map2mp(sp);
+	main_char.x(p.x);
+	main_char.y(p.y);
+	
+	//console.log(s_pos.x,s_pos.y,s_pos.h);
+	
+}
+function draw_map(sp=map_pos,r=range){
+	let p={x:Math.round(sp.x), y:Math.round(sp.y)};
+	
+	for(let y=-r;y<=r;y++){
+		for(let x=-r;x<=r;x++){
+			for(let h=0;h<2;h++){
+				let dx=(x+p.x)*2+h, dy=y+p.y;
+				let px=(x+r)*tile_x-tile_x2+h*tile_x2, py=(y+r)*tile_y-tile_y2+h*tile_y2;
+				
+				let c=(Map_Assert(dx,dy))?map_data[dy][dx]:blank;
+				ctx.drawImage(gop[c.down_layer], px, py,tile_x,tile_y); //下層
+				if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], px, py,tile_x,tile_y); //up層	
+				
+				
 			
-			let dx=col+px-r2,dy=row+py-r4;
-			let c=(Map_Assert(dx,dy))?map_data[dy][dx]:blank;
-			ctx.drawImage(gop[c.down_layer], x, y,tile_x,tile_y); //下層
-			if(c.up_layer>0)ctx.drawImage(gop[c.up_layer], x, y,tile_x,tile_y); //up層	
-			
-			
-			if(dx<s_pos.x&&s_pos.x<dx&&dy<s_pos.y&&s_pos.y<dy) {
-				x=(s_pos.x)*tile_x2-tile_x2, y=(s_pos.y)*tile_y+(s_pos.x)%2*tile_y2-tile_y2;
-				main_char.x(x+5); 
-				main_char.y(y-35);
-				main_flag=true;
 			}
 		}
 	}
-	draw_gate();
-	//if(main_flag==false) main_char.visible(false);
+	map_pos.x=p.x;
+	map_pos.y=p.y;
+	//map_pos.h=p.h;
 }
 function PrefixInteger(num, length) {
 	return (Array(length).join('0') + num).slice(-length);
 }
-function make_arr(){
-	let arr=new Array(128);
+function make_arr(x=128,y=128,h=2){
+	let arr=new Array(x);
 	for(let i=0;i<arr.length;i++){
-		arr[i]=new Array(128);
+		arr[i]=new Array(y);
 		for(let j=0;j<arr[i].length;j++){
-			arr[i][j]=new Array(2);
+			arr[i][j]=new Array(h);
 			for(let k=0;k<arr[i][j].length;k++)
 				arr[i][j][k]=0;
 		}
@@ -501,7 +566,7 @@ function draw_gate(px=map_pos.x,py=map_pos.y){
 	}
 }
 
-layer.add(transport,tooltip);
+//layer.add(transport,tooltip);
 gate[1]=[];//余杭村
 gate[1].push({name:"李大娘的客棧", path:"0010",s_pos:{x:78,y:54},e_pos:{x:63,y:105}});
 gate[1].push({name:"往漁市場", path:"0002",s_pos:{x:125,y:75},e_pos:{x:0,y:110}});
