@@ -39,6 +39,7 @@
 <table>
 	<thead><tr><th>工作日志：</th><tr></thead>
 	<tbody>
+		<tr><td>（2022.11.15）加入背景音樂</td></tr>
 		<tr><td>（2022.11.12）彈性設定視野寬度</td></tr>
 		<tr><td>（2022.11.12）移動位置偏移修正</td></tr>
 		<tr><td>（2022.11.11）加入測試傳送點（有問題）</td></tr>
@@ -56,6 +57,8 @@
 	</tbody>
 </table>
 </div>
+<video id="bgm" autoplay src="./data/musics/晨光.mp3"></video>
+
 </body>
 
 <script src="./data/jquery.min.js"></script>
@@ -99,7 +102,7 @@ function moving(evt){
 let mousedown=0,mouse_evt=null;
 layer.getCanvas()._canvas.addEventListener('mousedown', function(evt) {
 	mousedown=1;
-	
+	document.getElementById("bgm").play();
 	moving(evt);
 	
 	/*let msg = [];
@@ -124,7 +127,6 @@ layer.getCanvas()._canvas.addEventListener('mouseup', function(evt) {
 document.oncontextmenu = function(){ window.event.returnValue=false; }//將滑鼠右鍵事件取消 
 	
 var anim = new Konva.Animation(function (frame) {
-	
 	if(e_pos.x!=s_pos.x || e_pos.y!=s_pos.y || e_pos.h!=s_pos.h){
 		if(e_pos.x>s_pos.x) {
 			s_pos.x+=char_speed; 
@@ -140,7 +142,6 @@ var anim = new Konva.Animation(function (frame) {
 				//console.log(2);
 			}
 		}
-		
 		if(e_pos.y>s_pos.y) {
 			s_pos.y+=char_speed; 
 			if(e_pos.y<s_pos.y){
@@ -154,9 +155,7 @@ var anim = new Konva.Animation(function (frame) {
 				s_pos.y=e_pos.y;
 				//console.log(4);
 			}
-			
 		}
-		
 		if(e_pos.h>s_pos.h) {
 			s_pos.h+=char_speed; 
 			if(e_pos.h<s_pos.h){
@@ -169,16 +168,11 @@ var anim = new Konva.Animation(function (frame) {
 			if(e_pos.h>s_pos.h){
 				s_pos.h=e_pos.h;
 				//console.log(6);
-			}
-			
+			}	
 		}
-		
 		if(mousedown && mouse_evt!=null) moving(mouse_evt);
-		
 		draw_view(s_pos);
 	}	
-	
-	
 	//else main_char.stop();
 }, layer);
 
@@ -286,6 +280,7 @@ async function sys_init(path="0001"){
 
 	anim.start(); 
 	draw_view();
+	
 	console.log("sys_init");
 }
 /*fileInput.addEventListener('change', function (e) {
@@ -308,6 +303,15 @@ async function addImageProcess(src){
   })
 }
 
+function read_mgo(c=11,path="0002"){
+	let id=parseInt(path);
+	
+	mgo[id]=[];
+	for(let c=0;c<=max_gop;c++){	
+		mgo[c]=new Image();
+		mgo[c].src=("./data/img/mgo/"+path+"/"+c+".png");
+	}
+}
 function read_gop(path="0002",max_gop){
 	//console.log('max_gop=',max_gop);
 	
@@ -422,9 +426,9 @@ function map2mp(pos=s_pos){
 }
 function draw_char(sp=s_pos,r=range){
 	
-	let p=map2mp(sp);
-	main_char.x(p.x);
-	main_char.y(p.y);
+	let p={x:range*tile_x+s_pos.h*tile_x2,y:range*tile_y+s_pos.h*tile_y2};//=map2mp(sp);
+	main_char.position(p);
+	//main_char.y(p.y);
 	
 	//console.log(s_pos.x,s_pos.y,s_pos.h);
 	
