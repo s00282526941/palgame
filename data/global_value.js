@@ -4,7 +4,7 @@ var layer = new Konva.Layer(),map_layer = new Konva.Layer();
 var ctx = map_layer.getCanvas()._canvas.getContext('2d');
 var ctx_layer = layer.getCanvas()._canvas.getContext('2d');
 
-let map_data=[],gop=[],mousePos,scale=3;
+let map_data=[],gop=[],mgo=[],mousePos,scale=3;
 let tile_x=32*scale,tile_y=15*scale,tile_x2=tile_x/2,tile_y2=tile_y/2;
 let blank={down_layer:0,down_layer:0,barrier:true};
 let s_pos={x:33, y:55,h:1},e_pos={x:33, y:55,h:1},map_pos={x:33, y:55,h:1},range=Math.round(width/2/tile_x);
@@ -16,7 +16,10 @@ function change_scale(s=scale){
 	scale=s;
 	tile_x=32*scale,tile_y=15*scale,tile_x2=tile_x/2,tile_y2=tile_y/2;
 	range=Math.round(width/2/tile_x);
-	draw_map();
+	draw_view();
+	main_char.scale({x:scale,y:scale});
+	cursor.strokeWidth(scale*2);
+	cursor.offset({x: tile_x2,y: tile_y2,});
 }
 var stage = new Konva.Stage({
 	container: 'container',
